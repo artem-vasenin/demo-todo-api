@@ -1,8 +1,11 @@
+import * as path from 'path';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import * as path from 'path';
+
+import { UserModule } from './user/user.module';
+import { User } from '@/user/user.model';
 
 @Module({
   imports: [
@@ -16,12 +19,13 @@ import * as path from 'path';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      models: [],
+      models: [User],
       autoLoadModels: true,
     }),
     ServeStaticModule.forRoot({
       rootPath: path.resolve(__dirname, 'static'),
     }),
+    UserModule,
   ],
 })
 export class AppModule {}

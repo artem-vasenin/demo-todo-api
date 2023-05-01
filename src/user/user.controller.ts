@@ -14,6 +14,7 @@ import { User } from '@/user/user.model';
 import { UserService } from '@/user/user.service';
 import { CreateUserDto } from '@/user/dto/create-user.dto';
 import { ValidationPipe } from '@/pipes/validation.pipe';
+import { BanUserDto } from '@/user/dto/ban-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -54,5 +55,13 @@ export class UserController {
   @Delete('/:login')
   delete(@Param('login') id: string) {
     return this.userService.delete(id);
+  }
+
+  @ApiOperation({ summary: 'Отправить в бан' })
+  @ApiResponse({ status: 200 })
+  @UsePipes(ValidationPipe)
+  @Post('/ban')
+  ban(@Body() dto: BanUserDto) {
+    return this.userService.ban(dto);
   }
 }

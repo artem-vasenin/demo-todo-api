@@ -4,6 +4,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from './user.model';
 import { CreateUserDto } from '@/user/dto/create-user.dto';
 import { InjectModel } from '@nestjs/sequelize';
+import { BanUserDto } from './dto/ban-user.dto';
 
 @Injectable()
 export class UserService {
@@ -52,5 +53,20 @@ export class UserService {
 
   async delete(id: string): Promise<number> {
     return await this.userRepo.destroy({ where: { id } });
+  }
+
+  async ban(dto: BanUserDto): Promise<User> {
+    try {
+      const user = await this.userRepo.findByPk(dto.userId);
+      if (!user) {
+        throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
+      }
+      user.isBlocked = true;
+      user.blockReason = dto.reason;
+      await user.save();
+      return user;
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.NOT_FOUND);
+    }
   }
 }

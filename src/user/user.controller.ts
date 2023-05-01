@@ -7,11 +7,13 @@ import {
   Param,
   Post,
   Put,
+  UsePipes,
 } from '@nestjs/common';
 
 import { User } from '@/user/user.model';
 import { UserService } from '@/user/user.service';
 import { CreateUserDto } from '@/user/dto/create-user.dto';
+import { ValidationPipe } from '@/pipes/validation.pipe';
 
 @Controller('user')
 export class UserController {
@@ -19,6 +21,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'Создание польователя' })
   @ApiResponse({ status: 200, type: User })
+  @UsePipes(ValidationPipe)
   @Post()
   create(@Body() dto: CreateUserDto) {
     return this.userService.create(dto);
@@ -33,13 +36,14 @@ export class UserController {
 
   @ApiOperation({ summary: 'Получение польователя по логину' })
   @ApiResponse({ status: 200, type: [User] })
-  @Get('/:login')
-  getByLogin(@Param('email') email: string) {
-    return this.userService.getByLogin(email);
+  @Get('/:id')
+  getById(@Param('id') id: string) {
+    return this.userService.getById(id);
   }
 
   @ApiOperation({ summary: 'Редактирование польователя' })
   @ApiResponse({ status: 200, type: User })
+  @UsePipes(ValidationPipe)
   @Put()
   update(@Body() dto: CreateUserDto) {
     return this.userService.update(dto);

@@ -7,42 +7,50 @@ import { InjectModel } from '@nestjs/sequelize';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User) private userRepo: typeof User) {
-  }
+  constructor(@InjectModel(User) private userRepo: typeof User) {}
 
   async create(dto: CreateUserDto): Promise<User> {
-    return await this.userRepo.create(dto);
+    try {
+      const user = await this.userRepo.findOne({ where: { email: dto.email } });
+      if (user) {
+        throw new HttpException('Email уже занят', HttpStatus.BAD_REQUEST);
+      }
+      const password = await bcrypt.hash(dto.password, 5);
+      return await this.userRepo.create({ ...dto, password });
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async getList(): Promise<User[]> {
-    return await this.userRepo.findAll();
+    return await this.userRepo.findAll({
+      attributes: { exclude: ['password'] },
+    });
   }
 
-  async getByLogin(email: string): Promise<User> {
-    return await this.findOrError(email);
+  async getById(id: string): Promise<User> {
+    return await this.userRepo.findByPk(id, {
+      attributes: { exclude: ['password'] },
+    });
   }
 
   async update(dto: CreateUserDto): Promise<User> {
-    const user = await this.findOrError(dto.email);
-    const hashPasswd = await bcrypt.hash(dto.password, 5);
-    user.name = dto.name;
-    user.password = hashPasswd;
-    await user.save();
-    return user;
+    try {
+      const user = await this.userRepo.findOne({ where: { email: dto.email } });
+      if (!user) {
+        throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
+      }
+      const hashPasswd = await bcrypt.hash(dto.password, 5);
+      user.name = dto.name;
+      user.password = hashPasswd;
+      await user.save();
+      return user;
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.NOT_FOUND);
+    }
   }
 
   async delete(id: string): Promise<number> {
     return await this.userRepo.destroy({ where: { id } });
-  }
-
-  private async findOrError(email: string): Promise<User> {
-    try {
-      const user = await this.userRepo.findOne({ where: { email } });
-      if (!user) {
-        throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
-      }
-    } catch (e) {
-      throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
-    }
   }
 }
